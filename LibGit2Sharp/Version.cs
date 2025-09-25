@@ -43,11 +43,6 @@ namespace LibGit2Sharp
         }
 
         /// <summary>
-        /// Returns the SHA hash for the libgit2 library.
-        /// </summary>
-        public virtual string LibGit2CommitSha => RetrieveAbbrevShaFrom(AssemblyCommitIds.LibGit2CommitSha);
-
-        /// <summary>
         /// Returns the SHA hash for the LibGit2Sharp library.
         /// </summary>
         public virtual string LibGit2SharpCommitSha => RetrieveAbbrevShaFrom(AssemblyCommitIds.LibGit2SharpCommitSha);

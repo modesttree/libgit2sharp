@@ -16,7 +16,7 @@ namespace LibGit2Sharp.Core
     internal static class NativeMethods
     {
         public const uint GIT_PATH_MAX = 4096;
-        private const string libgit2 = NativeDllName.Name;
+        private const string libgit2 = "libgit2.dll";
 
         // An object tied to the lifecycle of the NativeMethods static class.
         // This will handle initialization and shutdown of the underlying

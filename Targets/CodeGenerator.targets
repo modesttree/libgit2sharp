@@ -47,7 +47,6 @@
         {
         internal static class AssemblyCommitIds
         {
-        public const string LibGit2CommitSha = "$(libgit2_hash)"%3b
         public const string LibGit2SharpCommitSha = "$(LibGit2SharpCommitSha)"%3b
         }
         }
