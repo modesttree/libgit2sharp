@@ -16,7 +16,19 @@ namespace LibGit2Sharp.Core
     internal static class NativeMethods
     {
         public const uint GIT_PATH_MAX = 4096;
+
+#if UNITY_EDITOR
+        // This is used to keep the git2.dll which is the debug version separate along with its
+        // pdb files so I can attach VS and debug the dll.
+        private const string libgit2 = "git2.dll";
+
+        public class UniqueId
+        {
+            public const string UniqueIdentifier = "B70809AC-E9BF-4A23-8434-D7297FFF590D";
+        }
+#else
         private const string libgit2 = "libgit2";
+#endif
 
         // An object tied to the lifecycle of the NativeMethods static class.
         // This will handle initialization and shutdown of the underlying
@@ -68,7 +80,7 @@ namespace LibGit2Sharp.Core
             return Path.Combine(nativeLibraryDir, libgit2 + Platform.GetNativeLibraryExtension());
         }
 
-#if NETFRAMEWORK || NETSTANDARD
+#if UNITY_EDITOR || NETFRAMEWORK || NETSTANDARD
         private static bool TryUseNativeLibrary() => false;
 #else
         private static bool TryUseNativeLibrary()

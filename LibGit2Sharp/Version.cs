@@ -42,11 +42,6 @@ namespace LibGit2Sharp
             get { return Proxy.git_libgit2_features(); }
         }
 
-        /// <summary>
-        /// Returns the SHA hash for the LibGit2Sharp library.
-        /// </summary>
-        public virtual string LibGit2SharpCommitSha => RetrieveAbbrevShaFrom(AssemblyCommitIds.LibGit2SharpCommitSha);
-
         private string RetrieveAbbrevShaFrom(string sha)
         {
             var index = sha.Length > 7 ? 7 : sha.Length;

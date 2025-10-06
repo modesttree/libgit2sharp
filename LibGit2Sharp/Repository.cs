@@ -1011,6 +1011,18 @@ namespace LibGit2Sharp
             }
         }
 
+        public void Reset(ResetMode resetMode, Commit commit, IEnumerable<string> paths, CheckoutOptions opts)
+        {
+            Ensure.ArgumentNotNull(commit, "commit");
+            Ensure.ArgumentNotNull(opts, "opts");
+
+            using (GitCheckoutOptsWrapper checkoutOptionsWrapper = new GitCheckoutOptsWrapper(opts, ToFilePaths(paths)))
+            {
+                var options = checkoutOptionsWrapper.Options;
+                Proxy.git_reset(handle, commit.Id, resetMode, ref options);
+            }
+        }
+
         /// <summary>
         /// Updates specifed paths in the index and working directory with the versions from the specified branch, reference, or SHA.
         /// <para>
