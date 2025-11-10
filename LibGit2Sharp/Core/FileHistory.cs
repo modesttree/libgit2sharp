@@ -113,62 +113,36 @@ namespace LibGit2Sharp.Core
         /// <returns>A collection of <see cref="LogEntry"/> instances.</returns>
         private static IEnumerable<LogEntry> FullHistory(IRepository repo, string path, CommitFilter filter)
         {
-            var map = new Dictionary<Commit, string>();
-
             foreach (var currentCommit in repo.Commits.QueryBy(filter))
             {
-                var currentPath = map.Keys.Count > 0 ? map[currentCommit] : path;
-                var currentTreeEntry = currentCommit.Tree[currentPath];
+                var currentTreeEntry = currentCommit.Tree[path];
 
+                // Do not early exit for missing file in the tree as that doesn't work with merges
                 if (currentTreeEntry == null)
                 {
-                    yield break;
+                    continue;
                 }
 
                 var parentCount = currentCommit.Parents.Count();
                 if (parentCount == 0)
                 {
-                    yield return new LogEntry { Path = currentPath, Commit = currentCommit };
+                    yield return new LogEntry { Path = path, Commit = currentCommit };
+                }
+                else if (parentCount > 1)
+                {
+                    continue;
                 }
                 else
                 {
-                    DetermineParentPaths(repo, currentCommit, currentPath, map);
-
-                    if (parentCount != 1)
-                    {
-                        continue;
-                    }
-
                     var parentCommit = currentCommit.Parents.Single();
-                    var parentPath = map[parentCommit];
-                    var parentTreeEntry = parentCommit.Tree[parentPath];
+                    var parentTreeEntry = parentCommit.Tree[path];
 
                     if (parentTreeEntry == null ||
-                        parentTreeEntry.Target.Id != currentTreeEntry.Target.Id ||
-                        parentPath != currentPath)
+                        parentTreeEntry.Target.Id != currentTreeEntry.Target.Id)
                     {
-                        yield return new LogEntry { Path = currentPath, Commit = currentCommit };
+                        yield return new LogEntry { Path = path, Commit = currentCommit };
                     }
                 }
-            }
-        }
-
-        private static void DetermineParentPaths(IRepository repo, Commit currentCommit, string currentPath, IDictionary<Commit, string> map)
-        {
-            foreach (var parentCommit in currentCommit.Parents.Where(parentCommit => !map.ContainsKey(parentCommit)))
-            {
-                map.Add(parentCommit, ParentPath(repo, currentCommit, currentPath, parentCommit));
-            }
-        }
-
-        private static string ParentPath(IRepository repo, Commit currentCommit, string currentPath, Commit parentCommit)
-        {
-            using (var treeChanges = repo.Diff.Compare<TreeChanges>(parentCommit.Tree, currentCommit.Tree))
-            {
-                var treeEntryChanges = treeChanges.FirstOrDefault(c => c.Path == currentPath);
-                return treeEntryChanges != null && treeEntryChanges.Status == ChangeKind.Renamed
-                    ? treeEntryChanges.OldPath
-                    : currentPath;
             }
         }
     }
