@@ -480,9 +480,9 @@ namespace LibGit2Sharp
         /// </summary>
         /// <param name="path">The path to the working folder when initializing a standard ".git" repository. Otherwise, when initializing a bare repository, the path to the expected location of this later.</param>
         /// <returns>The path to the created repository.</returns>
-        public static string Init(string path)
+        public static string Init(string path, string defaultBranchName)
         {
-            return Init(path, false);
+            return Init(path, defaultBranchName, false);
         }
 
         /// <summary>
@@ -491,11 +491,11 @@ namespace LibGit2Sharp
         /// <param name="path">The path to the working folder when initializing a standard ".git" repository. Otherwise, when initializing a bare repository, the path to the expected location of this later.</param>
         /// <param name="isBare">true to initialize a bare repository. False otherwise, to initialize a standard ".git" repository.</param>
         /// <returns>The path to the created repository.</returns>
-        public static string Init(string path, bool isBare)
+        public static string Init(string path, string defaultBranchName, bool isBare)
         {
             Ensure.ArgumentNotNullOrEmptyString(path, "path");
 
-            using (RepositoryHandle repo = Proxy.git_repository_init_ext(null, path, isBare))
+            using (RepositoryHandle repo = Proxy.git_repository_init_ext(null, path, defaultBranchName, isBare))
             {
                 FilePath repoPath = Proxy.git_repository_path(repo);
                 return repoPath.Native;
@@ -508,7 +508,7 @@ namespace LibGit2Sharp
         /// <param name="workingDirectoryPath">The path to the working directory.</param>
         /// <param name="gitDirectoryPath">The path to the git repository to be created.</param>
         /// <returns>The path to the created repository.</returns>
-        public static string Init(string workingDirectoryPath, string gitDirectoryPath)
+        public static string Init(string workingDirectoryPath, string gitDirectoryPath, string defaultBranchName)
         {
             Ensure.ArgumentNotNullOrEmptyString(workingDirectoryPath, "workingDirectoryPath");
             Ensure.ArgumentNotNullOrEmptyString(gitDirectoryPath, "gitDirectoryPath");
@@ -520,7 +520,7 @@ namespace LibGit2Sharp
 
             // TODO: Shouldn't we ensure that the working folder isn't under the gitDir?
 
-            using (RepositoryHandle repo = Proxy.git_repository_init_ext(wd, gitDirectoryPath, false))
+            using (RepositoryHandle repo = Proxy.git_repository_init_ext(wd, gitDirectoryPath, defaultBranchName, false))
             {
                 FilePath repoPath = Proxy.git_repository_path(repo);
                 return repoPath.Native;

@@ -16,7 +16,7 @@ namespace LibGit2Sharp.Core
         public IntPtr InitialHead;
         public IntPtr OriginUrl;
 
-        public static GitRepositoryInitOptions BuildFrom(FilePath workdirPath, bool isBare)
+        public static GitRepositoryInitOptions BuildFrom(FilePath workdirPath, string defaultBranchName, bool isBare)
         {
             var opts = new GitRepositoryInitOptions
             {
@@ -29,6 +29,11 @@ namespace LibGit2Sharp.Core
                 Debug.Assert(!isBare);
 
                 opts.WorkDirPath = StrictFilePathMarshaler.FromManaged(workdirPath);
+            }
+
+            if (!string.IsNullOrEmpty(defaultBranchName))
+            {
+                opts.InitialHead = StrictUtf8Marshaler.FromManaged(defaultBranchName);
             }
 
             if (isBare)
