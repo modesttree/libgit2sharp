@@ -216,7 +216,9 @@ namespace LibGit2Sharp.Core
     internal class GitDiffOptions : IDisposable
     {
         public uint Version = 1;
-        public GitDiffOptionFlags Flags;
+
+        // Always update the index on git diff for unchanged files
+        public GitDiffOptionFlags Flags = GitDiffOptionFlags.GIT_DIFF_UPDATE_INDEX;
 
         /* options controlling which files are in the diff */
 
