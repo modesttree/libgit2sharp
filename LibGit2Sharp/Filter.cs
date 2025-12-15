@@ -104,19 +104,6 @@ namespace LibGit2Sharp
         }
 
         /// <summary>
-        /// Complete callback on filter
-        ///
-        /// This optional callback will be invoked when the upstream filter is
-        /// closed. Gives the filter a chance to perform any final actions or
-        /// necissary clean up.
-        /// </summary>
-        /// <param name="path">The path of the file being filtered</param>
-        /// <param name="root">The path of the working directory for the owning repository</param>
-        /// <param name="output">Output to the downstream filter or output writer</param>
-        protected virtual void Complete(string path, string root, Stream output)
-        { }
-
-        /// <summary>
         /// Initialize callback on filter
         ///
         /// Specified as `filter.initialize`, this is an optional callback invoked
@@ -127,30 +114,21 @@ namespace LibGit2Sharp
         /// initialization operations (in case the library is being used in a way
         /// that doesn't need the filter.
         /// </summary>
-        protected virtual void Initialize()
+        protected virtual void InitializeFilter()
         { }
 
-        /// <summary>
-        /// Indicates that a filter is going to be applied for the given file for
-        /// the given mode.
-        /// </summary>
-        /// <param name="path">The path of the file being filtered</param>
-        /// <param name="root">The path of the working directory for the owning repository</param>
-        /// <param name="mode">The filter mode</param>
-        protected virtual void Create(string path, string root, FilterMode mode)
-        { }
+        protected abstract void StartClean(string path, string root);
 
         /// <summary>
         /// Clean the input stream and write to the output stream.
         /// </summary>
         /// <param name="path">The path of the file being filtered</param>
         /// <param name="root">The path of the working directory for the owning repository</param>
-        /// <param name="input">Input from the upstream filter or input reader</param>
-        /// <param name="output">Output to the downstream filter or output writer</param>
-        protected virtual void Clean(string path, string root, Stream input, Stream output)
-        {
-            input.CopyTo(output);
-        }
+        /// <param name="inputRawPointer">Input from the upstream filter or input reader</param>
+        /// <param name="inputLength">Length for the raw pointer in bytes</param>
+        protected abstract void DoClean(string path, string root, IntPtr inputRawPointer, int inputLength);
+
+        protected abstract void CompleteClean(string path, string root, Stream output);
 
         /// <summary>
         /// Smudge the input stream and write to the output stream.
@@ -159,10 +137,7 @@ namespace LibGit2Sharp
         /// <param name="root">The path of the working directory for the owning repository</param>
         /// <param name="input">Input from the upstream filter or input reader</param>
         /// <param name="output">Output to the downstream filter or output writer</param>
-        protected virtual void Smudge(string path, string root, Stream input, Stream output)
-        {
-            input.CopyTo(output);
-        }
+        protected abstract void Smudge(string path, string root, Stream input, Stream output);
 
         /// <summary>
         /// Determines whether the specified <see cref="object"/> is equal to the current <see cref="Filter"/>.
@@ -230,7 +205,7 @@ namespace LibGit2Sharp
             int result = 0;
             try
             {
-                Initialize();
+                InitializeFilter();
             }
             catch (Exception exception)
             {
@@ -242,7 +217,8 @@ namespace LibGit2Sharp
             return result;
         }
 
-        int StreamCreateCallback(out IntPtr git_writestream_out, GitFilter self, IntPtr payload, IntPtr filterSourcePtr, IntPtr git_writestream_next)
+        int StreamCreateCallback(out IntPtr git_writestream_out,
+            GitFilter self, IntPtr payload, IntPtr filterSourcePtr, IntPtr git_writestream_next)
         {
             int result = 0;
             var state = new StreamState();
@@ -266,7 +242,10 @@ namespace LibGit2Sharp
                 state.filterSource = FilterSource.FromNativePtr(filterSourcePtr);
                 state.output = new WriteStream(state.nextStream, state.nextPtr);
 
-                Create(state.filterSource.Path, state.filterSource.Root, state.filterSource.SourceMode);
+                if (state.filterSource.SourceMode == FilterMode.Clean)
+                {
+                    StartClean(state.filterSource.Path, state.filterSource.Root);
+                }
 
                 if (!activeStreams.TryAdd(state.thisPtr, state))
                 {
@@ -311,9 +290,12 @@ namespace LibGit2Sharp
 
                 Ensure.ArgumentIsExpectedIntPtr(stream, state.thisPtr, "stream");
 
-                using (BufferedStream outputBuffer = new BufferedStream(state.output, BufferSize))
+                if (state.filterSource.SourceMode == FilterMode.Clean)
                 {
-                    Complete(state.filterSource.Path, state.filterSource.Root, outputBuffer);
+                    using (BufferedStream outputBuffer = new BufferedStream(state.output, BufferSize))
+                    {
+                        CompleteClean(state.filterSource.Path, state.filterSource.Root, outputBuffer);
+                    }
                 }
 
                 result = state.nextStream.close(state.nextPtr);
@@ -370,22 +352,25 @@ namespace LibGit2Sharp
 
                 Ensure.ArgumentIsExpectedIntPtr(stream, state.thisPtr, "stream");
 
-                using (UnmanagedMemoryStream input = new UnmanagedMemoryStream((byte*)buffer.ToPointer(), (long)len))
-                using (BufferedStream outputBuffer = new BufferedStream(state.output, BufferSize))
+                if (state.filterSource.SourceMode == FilterMode.Clean)
                 {
-                    switch (state.filterSource.SourceMode)
+                    DoClean(state.filterSource.Path, state.filterSource.Root, buffer, (int)len);
+                }
+                else
+                {
+                    using (UnmanagedMemoryStream input = new UnmanagedMemoryStream((byte*)buffer.ToPointer(), (long)len))
+                    using (BufferedStream outputBuffer = new BufferedStream(state.output, BufferSize))
                     {
-                        case FilterMode.Clean:
-                            Clean(state.filterSource.Path, state.filterSource.Root, input, outputBuffer);
-                            break;
+                        switch (state.filterSource.SourceMode)
+                        {
+                            case FilterMode.Smudge:
+                                Smudge(state.filterSource.Path, state.filterSource.Root, input, outputBuffer);
+                                break;
 
-                        case FilterMode.Smudge:
-                            Smudge(state.filterSource.Path, state.filterSource.Root, input, outputBuffer);
-                            break;
-
-                        default:
-                            Proxy.git_error_set_str(GitErrorCategory.Filter, "Unexpected filter mode.");
-                            return (int)GitErrorCode.Ambiguous;
+                            default:
+                                Proxy.git_error_set_str(GitErrorCategory.Filter, "Unexpected filter mode.");
+                                return (int)GitErrorCode.Ambiguous;
+                        }
                     }
                 }
             }
