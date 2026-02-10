@@ -11,12 +11,14 @@ namespace LibGit2Sharp
         /// <summary>
         /// No checkout flags - use default behavior.
         /// </summary>
-        None = 0,
+        Safe = 1 << 0,
 
         /// <summary>
         /// Proceed with checkout even if the index or the working tree differs from HEAD.
         /// This will throw away local changes.
         /// </summary>
-        Force,
+        Force = 1 << 1,
+        CleanIgnored = 1 << 2,
+        CleanUntracked = 1 << 3
     }
 }

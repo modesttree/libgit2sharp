@@ -34,9 +34,35 @@ namespace LibGit2Sharp
         {
             get
             {
-                return CheckoutModifiers.HasFlag(CheckoutModifiers.Force)
-                    ? CheckoutStrategy.GIT_CHECKOUT_FORCE
-                    : CheckoutStrategy.GIT_CHECKOUT_SAFE;
+                var checkoutStragegyFlag = CheckoutStrategy.GIT_CHECKOUT_NONE;
+                var modifier = CheckoutModifiers;
+
+                if (modifier.HasFlag(CheckoutModifiers.Safe) && modifier.HasFlag(CheckoutModifiers.Force))
+                {
+                    throw new LibGit2SharpException("Checkout strategy cannot set 'force' and 'safe' together");
+                }
+
+                if (modifier.HasFlag(CheckoutModifiers.Force))
+                {
+                    checkoutStragegyFlag |= CheckoutStrategy.GIT_CHECKOUT_FORCE;
+                }
+
+                if (modifier.HasFlag(CheckoutModifiers.Safe) || modifier == 0)
+                {
+                    checkoutStragegyFlag |= CheckoutStrategy.GIT_CHECKOUT_SAFE;
+                }
+
+                if (modifier.HasFlag(CheckoutModifiers.CleanIgnored))
+                {
+                    checkoutStragegyFlag |= CheckoutStrategy.GIT_CHECKOUT_REMOVE_IGNORED;
+                }
+
+                if (modifier.HasFlag(CheckoutModifiers.CleanUntracked))
+                {
+                    checkoutStragegyFlag |= CheckoutStrategy.GIT_CHECKOUT_REMOVE_UNTRACKED;
+                }
+
+                return checkoutStragegyFlag;
             }
         }
 
