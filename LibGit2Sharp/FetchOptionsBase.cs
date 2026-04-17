@@ -52,6 +52,6 @@ namespace LibGit2Sharp
         /// <summary>
         /// Options for connecting through a proxy.
         /// </summary>
-        public ProxyOptions ProxyOptions { get; } = new();
+        public LibGitProxyOptions LibGitProxyOptions { get; } = new();
     }
 }

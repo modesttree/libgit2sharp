@@ -92,7 +92,7 @@ namespace LibGit2Sharp
             var gitCheckoutOptions = checkoutOptionsWrapper.Options;
 
             var gitFetchOptions = fetchOptionsWrapper.Options;
-            gitFetchOptions.ProxyOptions = options.FetchOptions.ProxyOptions.CreateGitProxyOptions();
+            gitFetchOptions.ProxyOptions = options.FetchOptions.LibGitProxyOptions.CreateGitProxyOptions();
             gitFetchOptions.RemoteCallbacks = new RemoteCallbacks(options.FetchOptions).GenerateCallbacks();
 
             if (options.FetchOptions != null && options.FetchOptions.CustomHeaders != null)

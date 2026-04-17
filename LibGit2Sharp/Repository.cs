@@ -656,7 +656,7 @@ namespace LibGit2Sharp
         /// <returns>The references in the remote repository.</returns>
         public static IEnumerable<Reference> ListRemoteReferences(string url)
         {
-            return ListRemoteReferences(url, null, new ProxyOptions());
+            return ListRemoteReferences(url, null, new LibGitProxyOptions());
         }
 
         /// <summary>
@@ -665,7 +665,7 @@ namespace LibGit2Sharp
         /// <param name="url">The url to list from.</param>
         /// <param name="proxyOptions">Options for connecting through a proxy.</param>
         /// <returns>The references in the remote repository.</returns>
-        public static IEnumerable<Reference> ListRemoteReferences(string url, ProxyOptions proxyOptions)
+        public static IEnumerable<Reference> ListRemoteReferences(string url, LibGitProxyOptions proxyOptions)
         {
             return ListRemoteReferences(url, null, proxyOptions);
         }
@@ -683,7 +683,7 @@ namespace LibGit2Sharp
         /// <returns>The references in the remote repository.</returns>
         public static IEnumerable<Reference> ListRemoteReferences(string url, CredentialsHandler credentialsProvider)
         {
-            return ListRemoteReferences(url, credentialsProvider, new ProxyOptions());
+            return ListRemoteReferences(url, credentialsProvider, new LibGitProxyOptions());
         }
 
         /// <summary>
@@ -698,7 +698,7 @@ namespace LibGit2Sharp
         /// <param name="credentialsProvider">The <see cref="Func{Credentials}"/> used to connect to remote repository.</param>
         /// <param name="proxyOptions">Options for connecting through a proxy.</param>
         /// <returns>The references in the remote repository.</returns>
-        public static IEnumerable<Reference> ListRemoteReferences(string url, CredentialsHandler credentialsProvider, ProxyOptions proxyOptions)
+        public static IEnumerable<Reference> ListRemoteReferences(string url, CredentialsHandler credentialsProvider, LibGitProxyOptions proxyOptions)
         {
             Ensure.ArgumentNotNull(url, "url");
 
@@ -798,7 +798,7 @@ namespace LibGit2Sharp
 
                 var gitFetchOptions = fetchOptionsWrapper.Options;
                 gitFetchOptions.Depth = options.FetchOptions.Depth;
-                gitFetchOptions.ProxyOptions = options.FetchOptions.ProxyOptions.CreateGitProxyOptions();
+                gitFetchOptions.ProxyOptions = options.FetchOptions.LibGitProxyOptions.CreateGitProxyOptions();
                 gitFetchOptions.RemoteCallbacks = new RemoteCallbacks(options.FetchOptions).GenerateCallbacks();
 
                 if (options.FetchOptions != null && options.FetchOptions.CustomHeaders != null)
